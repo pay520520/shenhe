@@ -665,6 +665,7 @@ class CfAdminActionService
             }
             $zoneIdInput = trim($_POST['cloudflare_zone_id'] ?? '');
             $descriptionInput = trim($_POST['description'] ?? '');
+            $requireInviteCode = (($_POST['require_invite_code'] ?? '0') === '1') ? 1 : 0;
             $updatePayload = [
                 'cloudflare_zone_id' => $zoneIdInput !== '' ? $zoneIdInput : null,
                 'description' => $descriptionInput !== '' ? $descriptionInput : null,
@@ -672,6 +673,7 @@ class CfAdminActionService
                 'per_user_limit' => $perUserLimitInput,
                 'default_term_years' => $defaultTermInput,
                 'provider_account_id' => $providerIdForUpdate,
+                'require_invite_code' => $requireInviteCode,
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
             Capsule::table('mod_cloudflare_rootdomains')->where('id', $rootId)->update($updatePayload);

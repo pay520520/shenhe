@@ -50,6 +50,7 @@ class CfAdminViewModelBuilder
         $viewModel['runtime'] = self::buildRuntimeTools();
 $viewModel['dnsUnlockLogs'] = self::buildDnsUnlockLogs();
 $viewModel['inviteRegistrationLogs'] = self::buildInviteRegistrationLogs();
+        $viewModel['rootdomainInviteLogs'] = self::buildRootdomainInviteLogs();
         $viewModel['logs'] = self::buildLogs();
 
         return $viewModel;
@@ -1268,6 +1269,32 @@ $viewModel['inviteRegistrationLogs'] = self::buildInviteRegistrationLogs();
             return [
                 'items' => [],
                 'search' => $search,
+                'pagination' => [
+                    'page' => $page,
+                    'perPage' => 20,
+                    'total' => 0,
+                    'totalPages' => 1,
+                ],
+            ];
+        }
+    }
+
+    private static function buildRootdomainInviteLogs(): array
+    {
+        $search = trim((string) ($_GET['rootdomain_invite_search'] ?? ''));
+        $searchType = trim((string) ($_GET['rootdomain_invite_search_type'] ?? 'all'));
+        $page = max(1, (int) ($_GET['rootdomain_invite_page'] ?? 1));
+        try {
+            if (!class_exists('CfRootdomainInviteService')) {
+                require_once __DIR__ . '/RootdomainInviteService.php';
+            }
+            $data = CfRootdomainInviteService::fetchAdminLogs($search, $searchType, $page, 20);
+            return $data;
+        } catch (\Throwable $e) {
+            return [
+                'items' => [],
+                'search' => $search,
+                'searchType' => $searchType,
                 'pagination' => [
                     'page' => $page,
                     'perPage' => 20,

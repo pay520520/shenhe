@@ -498,6 +498,7 @@ $riskLogEvents = $riskLogMeta['entries'] ?? [];
 <?php include __DIR__ . '/admin/partials/runtime_tools.tpl'; ?>
 <?php include __DIR__ . '/admin/partials/dns_unlock_logs.tpl'; ?>
 <?php include __DIR__ . '/admin/partials/invite_registration_logs.tpl'; ?>
+<?php include __DIR__ . '/admin/partials/rootdomain_invite_logs.tpl'; ?>
 
 <?php include __DIR__ . '/admin/partials/job_queue.tpl'; ?>
 

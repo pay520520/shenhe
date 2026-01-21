@@ -179,6 +179,9 @@ class CfClientViewModelBuilder
         $globals['roots'] = self::loadRootDomains();
         $globals['rootLimitMap'] = self::loadRootLimitMap();
         $globals['rootMaintenanceMap'] = self::loadRootMaintenanceMap();
+        $globals['rootInviteRequiredMap'] = self::loadRootInviteRequiredMap();
+        $globals['rootdomainInviteCodes'] = self::loadUserRootdomainInviteCodes($userId);
+        $globals['rootdomainInviteMaxPerUser'] = max(0, intval($moduleSettings['rootdomain_invite_max_per_user'] ?? 0));
 
         $globals['userid'] = $userId;
         $globals['myInviteCode'] = self::ensureInviteCode($userId);
@@ -415,6 +418,38 @@ class CfClientViewModelBuilder
             // ignore
         }
         return $map;
+    }
+
+    private static function loadRootInviteRequiredMap(): array
+    {
+        $map = [];
+        try {
+            $rows = Capsule::table('mod_cloudflare_rootdomains')
+                ->select('domain', 'require_invite_code')
+                ->get();
+            foreach ($rows as $row) {
+                $domain = strtolower(trim((string)($row->domain ?? '')));
+                if ($domain !== '') {
+                    $map[$domain] = intval($row->require_invite_code ?? 0) === 1;
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return $map;
+    }
+
+    private static function loadUserRootdomainInviteCodes(int $userId): array
+    {
+        $codes = [];
+        try {
+            if (class_exists('CfRootdomainInviteService')) {
+                $codes = CfRootdomainInviteService::getUserAllInviteCodes($userId);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return $codes;
     }
 
     private static function ensureInviteCode(int $userId): string
