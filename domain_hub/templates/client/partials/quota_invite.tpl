@@ -77,6 +77,106 @@ $inviteLoadingLabel = $cfInviteText('cfclient.invite.table.loading', '加载中.
                 </div>
             </div>
 
+            <?php
+            // 域名邀请码显示
+            $domainInviteCodes = $domainInviteCodes ?? [];
+            if (!empty($domainInviteCodes)):
+            ?>
+            <!-- 域名邀请码 -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header bg-gradient-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-key"></i> <?php echo cfclient_lang('cfclient.domain_invite.title', '我的域名邀请码', [], true); ?>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <?php echo cfclient_lang('cfclient.domain_invite.info', '以下根域名需要邀请码才能注册。您可以将邀请码分享给好友，帮助他们注册域名。每个邀请码使用一次后会自动刷新。', [], true); ?>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><?php echo cfclient_lang('cfclient.domain_invite.table.rootdomain', '根域名', [], true); ?></th>
+                                    <th><?php echo cfclient_lang('cfclient.domain_invite.table.code', '邀请码', [], true); ?></th>
+                                    <th><?php echo cfclient_lang('cfclient.domain_invite.table.usage', '使用情况', [], true); ?></th>
+                                    <th><?php echo cfclient_lang('cfclient.domain_invite.table.actions', '操作', [], true); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($domainInviteCodes as $domain => $codeInfo): ?>
+                                <tr>
+                                    <td>
+                                        <code class="text-primary"><?php echo htmlspecialchars($domain); ?></code>
+                                    </td>
+                                    <td>
+                                        <strong class="text-dark" style="font-size: 1.1em; letter-spacing: 2px; font-family: 'Courier New', monospace;">
+                                            <?php echo htmlspecialchars($codeInfo['code'] ?? 'N/A'); ?>
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge <?php echo ($codeInfo['used_count'] ?? 0) >= ($codeInfo['max_uses'] ?? 1) ? 'bg-secondary' : 'bg-success'; ?>">
+                                            <?php echo intval($codeInfo['used_count'] ?? 0); ?> / <?php echo intval($codeInfo['max_uses'] ?? 1); ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary copy-domain-invite-code" 
+                                                data-code="<?php echo htmlspecialchars($codeInfo['code'] ?? ''); ?>"
+                                                title="<?php echo cfclient_lang('cfclient.domain_invite.copy_title', '复制邀请码', [], true); ?>">
+                                            <i class="fas fa-copy"></i> <?php echo cfclient_lang('cfclient.common.copy', '复制', [], true); ?>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="text-muted small mt-2">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong><?php echo cfclient_lang('cfclient.domain_invite.tips', '温馨提示：', [], true); ?></strong>
+                        <ul class="mb-0">
+                            <li><?php echo cfclient_lang('cfclient.domain_invite.tip_1', '邀请码只能用于相应的根域名', [], true); ?></li>
+                            <li><?php echo cfclient_lang('cfclient.domain_invite.tip_2', '每个邀请码使用一次后会自动为您生成新的邀请码', [], true); ?></li>
+                            <li><?php echo cfclient_lang('cfclient.domain_invite.tip_3', '好友使用您的邀请码注册后，系统会自动记录', [], true); ?></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <script>
+            // 复制域名邀请码
+            document.querySelectorAll('.copy-domain-invite-code').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var code = this.getAttribute('data-code');
+                    if (!code) return;
+                    
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(code).then(function() {
+                            alert(cfLang('domainInviteCopySuccess', '邀请码已复制：' + code));
+                        }).catch(function() {
+                            alert(cfLang('domainInviteCopyFailed', '复制失败，请手动复制'));
+                        });
+                    } else {
+                        // Fallback for older browsers
+                        var input = document.createElement('input');
+                        input.value = code;
+                        document.body.appendChild(input);
+                        input.select();
+                        try {
+                            document.execCommand('copy');
+                            alert(cfLang('domainInviteCopySuccess', '邀请码已复制：' + code));
+                        } catch (err) {
+                            alert(cfLang('domainInviteCopyFailed', '复制失败，请手动复制'));
+                        }
+                        document.body.removeChild(input);
+                    }
+                });
+            });
+            </script>
+            <?php endif; ?>
+
             <?php if(!$hideInviteFeature): ?>
             <!-- 邀请好友解锁额度 Modal -->
             <div class="modal fade" id="inviteModal" tabindex="-1" aria-labelledby="inviteModalLabel" aria-hidden="true">

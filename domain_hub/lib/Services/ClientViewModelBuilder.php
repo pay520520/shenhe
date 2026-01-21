@@ -179,6 +179,8 @@ class CfClientViewModelBuilder
         $globals['roots'] = self::loadRootDomains();
         $globals['rootLimitMap'] = self::loadRootLimitMap();
         $globals['rootMaintenanceMap'] = self::loadRootMaintenanceMap();
+        $globals['rootInviteRequiredMap'] = self::loadRootInviteRequiredMap();
+        $globals['domainInviteCodes'] = self::loadDomainInviteCodes($userId);
 
         $globals['userid'] = $userId;
         $globals['myInviteCode'] = self::ensureInviteCode($userId);
@@ -415,6 +417,57 @@ class CfClientViewModelBuilder
             // ignore
         }
         return $map;
+    }
+
+    private static function loadRootInviteRequiredMap(): array
+    {
+        $map = [];
+        try {
+            if (!Capsule::schema()->hasColumn('mod_cloudflare_rootdomains', 'require_invite_code')) {
+                return $map;
+            }
+            $rows = Capsule::table('mod_cloudflare_rootdomains')
+                ->select('domain', 'require_invite_code')
+                ->get();
+            foreach ($rows as $row) {
+                $domain = strtolower(trim((string)($row->domain ?? '')));
+                if ($domain !== '') {
+                    $map[$domain] = intval($row->require_invite_code ?? 0) === 1;
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return $map;
+    }
+
+    private static function loadDomainInviteCodes(int $userId): array
+    {
+        $codes = [];
+        try {
+            if (!class_exists('CfDomainInviteService') || !Capsule::schema()->hasTable('mod_cloudflare_domain_invite_codes')) {
+                return $codes;
+            }
+
+            $inviteService = CfDomainInviteService::instance();
+            $requiredDomains = $inviteService->getInviteRequiredRootdomains();
+            
+            if (empty($requiredDomains)) {
+                return $codes;
+            }
+
+            foreach ($requiredDomains as $domain) {
+                try {
+                    $codeInfo = $inviteService->getUserInviteCode($userId, $domain);
+                    $codes[$domain] = $codeInfo;
+                } catch (\Throwable $e) {
+                    // ignore individual errors
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return $codes;
     }
 
     private static function ensureInviteCode(int $userId): string

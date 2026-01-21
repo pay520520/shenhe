@@ -225,6 +225,16 @@ $dnsLineOptions = [
                             </div>
                             <div class="form-text"><?php echo $modalText('cfclient.modals.register.hint.prefix', '只能包含字母、数字和连字符，长度%1$s-%2$s字符', [$subPrefixMinLength, $subPrefixMaxLength]); ?></div>
                         </div>
+                        <div class="mb-3" id="invite_code_field" style="display: none;">
+                            <label class="form-label">
+                                <i class="fas fa-key text-warning"></i> <?php echo $modalText('cfclient.modals.register.label.invite_code', '邀请码'); ?>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="invite_code" id="register_invite_code" class="form-control text-uppercase" placeholder="<?php echo $modalText('cfclient.modals.register.placeholder.invite_code', '请输入10位邀请码'); ?>" maxlength="10" style="letter-spacing: 2px; font-weight: bold;">
+                            <div class="form-text text-warning">
+                                <i class="fas fa-info-circle"></i> <?php echo $modalText('cfclient.modals.register.hint.invite_code', '该根域名需要邀请码才能注册，请向朋友索要邀请码'); ?>
+                            </div>
+                        </div>
                         <div class="alert alert-info" id="registerImportantInfo">
                             <i class="fas fa-info-circle"></i>
                             <strong><?php echo $modalText('cfclient.modals.register.alert.title', '重要说明：'); ?></strong>

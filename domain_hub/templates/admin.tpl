@@ -499,6 +499,27 @@ $riskLogEvents = $riskLogMeta['entries'] ?? [];
 <?php include __DIR__ . '/admin/partials/dns_unlock_logs.tpl'; ?>
 <?php include __DIR__ . '/admin/partials/invite_registration_logs.tpl'; ?>
 
+<!-- 域名邀请注册日志链接 -->
+<?php if (class_exists('CfDomainInviteService') && Capsule::schema()->hasTable('mod_cloudflare_domain_invite_logs')): ?>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-key text-warning"></i> 域名邀请注册功能
+            </h5>
+            <a href="?module=<?php echo htmlspecialchars($moduleSlug); ?>&action=view_domain_invite_logs" 
+               class="btn btn-primary">
+                <i class="fas fa-history"></i> 查看邀请注册日志
+            </a>
+        </div>
+        <p class="text-muted mb-0 mt-2">
+            <i class="fas fa-info-circle"></i> 
+            管理和查看通过邀请码注册的域名记录。您可以在"根域名白名单"中为每个根域名单独开启邀请码注册要求。
+        </p>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php include __DIR__ . '/admin/partials/job_queue.tpl'; ?>
 
             <!-- 子域名已解析列表 -->
