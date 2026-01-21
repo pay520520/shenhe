@@ -229,6 +229,15 @@ $orderSaveLabel = $lang['rootdomain_order_save'] ?? '保存排序';
                                     <input type="number" class="form-control" name="default_term_years" min="0" value="<?php echo $rdDefaultTerm; ?>">
                                     <div class="form-text">0 表示使用系统默认配置</div>
                                 </div>
+                                <div class="col-md-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="require_invite_code" value="1" id="requireInviteCode<?php echo $rd->id; ?>" <?php echo !empty($rd->require_invite_code) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="requireInviteCode<?php echo $rd->id; ?>">
+                                            <strong>启用邀请码注册</strong>
+                                        </label>
+                                        <div class="form-text">开启后，用户注册该根域名的二级域名时必须输入邀请码</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="modal-footer">

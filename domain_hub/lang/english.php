@@ -237,6 +237,31 @@ $_LANG['cfclient.js.invite_reg_copy_success'] = 'Invite code copied';
 $_LANG['cfclient.js.invite_reg_copy_failed'] = 'Copy failed. Please copy manually';
 $_LANG['cfclient.invite_registration.auto_unlocked'] = 'Access granted automatically (existing user privilege)';
 $_LANG['cfclient.invite_registration.no_limit'] = 'Unlimited';
+
+// Rootdomain invite codes
+$_LANG['cfclient.rootdomain_invite.title'] = 'Root Domain Invite Codes';
+$_LANG['cfclient.rootdomain_invite.description'] = 'The following root domains require invite codes to register. You can share your invite code with friends, and the code will automatically refresh after use.';
+$_LANG['cfclient.rootdomain_invite.description_with_limit'] = 'The following root domains require invite codes to register. You can share your invite code with friends, up to %s invitations per root domain. The code will automatically refresh after use.';
+$_LANG['cfclient.rootdomain_invite.your_code'] = 'Your invite code';
+$_LANG['cfclient.rootdomain_invite.invited_count'] = 'Invited: %s users';
+$_LANG['cfclient.rootdomain_invite.remaining'] = 'Remaining: %s';
+$_LANG['cfclient.rootdomain_invite.limit_reached'] = 'Limit reached';
+$_LANG['cfclient.rootdomain_invite.code_not_generated'] = 'Failed to generate invite code, please refresh the page';
+$_LANG['cfclient.rootdomain_invite.no_roots'] = 'No root domains require invite codes';
+$_LANG['cfclient.modals.register.label.invite_code'] = 'Invite Code';
+$_LANG['cfclient.modals.register.placeholder.invite_code'] = 'Enter 10-character invite code';
+$_LANG['cfclient.modals.register.hint.invite_code'] = 'This root domain requires an invite code to register. Please obtain an invite code from an existing user.';
+$_LANG['cfclient.js.register_invite_code_required'] = 'This root domain requires an invite code';
+$_LANG['cfclient.js.register_invite_code_length'] = 'Invite code must be 10 characters';
+$_LANG['cfclient.actions.rootdomain_invite.code_required'] = 'This root domain requires an invite code to register.';
+$_LANG['cfclient.actions.rootdomain_invite.invalid_code'] = 'Invalid invite code, please check and try again.';
+$_LANG['cfclient.actions.rootdomain_invite.self_code'] = 'You cannot use your own invite code.';
+$_LANG['cfclient.actions.rootdomain_invite.inviter_banned'] = 'Inviter account is inactive, cannot use this invite code.';
+$_LANG['cfclient.actions.rootdomain_invite.inviter_limit_reached'] = 'This invite code has reached its usage limit.';
+$_LANG['cfclient.actions.rootdomain_invite.error'] = 'Invite code verification failed: %s';
+$_LANG['cfclient.actions.rootdomain_invite.verification_required'] = 'Invite code verification failed, cannot proceed with registration.';
+$_LANG['cfclient.subdomains.button.rootdomain_invite'] = 'Root Domain Invites';
+
 $_LANG['cfclient.subdomains.button.renew.redeem'] = 'Redeem (charge ¥%s)';
 $_LANG['cfclient.subdomains.button.redeem_ticket'] = 'Request restoration';
 $_LANG['cfclient.subdomains.details.title'] = 'DNS records';

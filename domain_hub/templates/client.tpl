@@ -483,6 +483,8 @@ window.__nsBySubId = <?php echo json_encode($nsBySubId ?? [], CFMOD_SAFE_JSON_FL
     <div class="container-fluid py-3">
         <?php include __DIR__ . '/client/partials/quota_invite.tpl'; ?>
 
+        <?php include __DIR__ . '/client/partials/rootdomain_invite_codes.tpl'; ?>
+
         <?php include __DIR__ . '/client/partials/subdomains.tpl'; ?>
 
         <?php include __DIR__ . '/client/partials/extras.tpl'; ?>

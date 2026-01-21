@@ -313,6 +313,12 @@ class CfModuleInstaller
                                 $table->boolean('maintenance')->default(0)->after('status');
                             });
                         }
+                        // 添加根域名邀请注册功能字段
+                        if (!Capsule::schema()->hasColumn('mod_cloudflare_rootdomains', 'require_invite_code')) {
+                            Capsule::schema()->table('mod_cloudflare_rootdomains', function ($table) {
+                                $table->boolean('require_invite_code')->default(0)->after('maintenance');
+                            });
+                        }
                     } catch (\Throwable $e) {
                         // ignore schema alteration errors
                     }
@@ -422,6 +428,43 @@ class CfModuleInstaller
                         $table->index('invitee_userid');
                         $table->index('invitee_email');
                         $table->index('invite_code');
+                        $table->index('created_at');
+                    });
+                }
+
+                // 根域名邀请码表（如果不存在）
+                if (!Capsule::schema()->hasTable('mod_cloudflare_rootdomain_invite_codes')) {
+                    Capsule::schema()->create('mod_cloudflare_rootdomain_invite_codes', function ($table) {
+                        $table->increments('id');
+                        $table->integer('userid')->unsigned();
+                        $table->string('rootdomain', 255);
+                        $table->string('invite_code', 10)->unique();
+                        $table->integer('code_generate_count')->unsigned()->default(1);
+                        $table->timestamps();
+                        $table->unique(['userid', 'rootdomain']);
+                        $table->index('rootdomain');
+                        $table->index('userid');
+                        $table->index('invite_code');
+                    });
+                }
+
+                // 根域名邀请注册日志表（如果不存在）
+                if (!Capsule::schema()->hasTable('mod_cloudflare_rootdomain_invite_logs')) {
+                    Capsule::schema()->create('mod_cloudflare_rootdomain_invite_logs', function ($table) {
+                        $table->increments('id');
+                        $table->string('rootdomain', 255);
+                        $table->string('invite_code', 10);
+                        $table->integer('inviter_userid')->unsigned();
+                        $table->integer('invitee_userid')->unsigned()->nullable();
+                        $table->string('invitee_email', 191)->nullable();
+                        $table->string('subdomain', 255)->nullable();
+                        $table->string('invitee_ip', 64)->nullable();
+                        $table->timestamps();
+                        $table->index('rootdomain');
+                        $table->index('invite_code');
+                        $table->index('inviter_userid');
+                        $table->index('invitee_userid');
+                        $table->index('invitee_email');
                         $table->index('created_at');
                     });
                 }

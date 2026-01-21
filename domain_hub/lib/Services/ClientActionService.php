@@ -549,8 +549,108 @@ if($_POST['action'] == "register") {
             $rootdomain = trim($_POST['rootdomain']);
             $subprefixLen = strlen($subprefix);
 
-            if ($subprefix === '' || $rootdomain === '') {
-                $msg = self::actionText('register.missing_fields', '请填写完整信息');
+            // 根域名邀请码验证 - 提前验证
+            $rootdomainInviteVerified = true;
+            $rootdomainInviteRequired = false;
+            try {
+                if (class_exists('CfRootdomainInviteService') && $rootdomain !== '') {
+                    $rootdomainInviteRequired = CfRootdomainInviteService::isInviteRequired($rootdomain);
+                }
+            } catch (\Throwable $e) {
+                $rootdomainInviteRequired = false;
+            }
+            
+            if ($rootdomainInviteRequired && $subprefix !== '' && $rootdomain !== '') {
+                $rootdomainInviteCode = trim($_POST['rootdomain_invite_code'] ?? '');
+                if ($rootdomainInviteCode === '') {
+                    $msg = self::actionText('rootdomain_invite.code_required', '该根域名需要邀请码才能注册，请输入邀请码。');
+                    $msg_type = 'warning';
+                    $registerError = $msg;
+                    $rootdomainInviteVerified = false;
+                } else {
+                    // 立即验证邀请码（但不记录使用，等注册成功后再记录）
+                    try {
+                        if (!class_exists('CfRootdomainInviteService')) {
+                            throw new \Exception('邀请服务不可用');
+                        }
+                        
+                        $clientEmail = self::resolveClientEmail($userid);
+                        $clientIp = $_SERVER['REMOTE_ADDR'] ?? '';
+                        $fullsub = strtolower($subprefix) . '.' . strtolower($rootdomain);
+                        
+                        // 先进行预验证（不使用邀请码）
+                        $codeRow = Capsule::table('mod_cloudflare_rootdomain_invite_codes')
+                            ->where('invite_code', strtoupper($rootdomainInviteCode))
+                            ->where('rootdomain', $rootdomain)
+                            ->first();
+
+                        if (!$codeRow) {
+                            throw new \InvalidArgumentException('invalid_code');
+                        }
+
+                        $inviterId = (int) ($codeRow->userid ?? 0);
+
+                        // 不能使用自己的邀请码
+                        if ($inviterId === $userid) {
+                            throw new \InvalidArgumentException('self_code');
+                        }
+
+                        // 检查邀请人状态
+                        $inviterStatus = Capsule::table('tblclients')->where('id', $inviterId)->value('status');
+                        if ($inviterStatus !== null && strtolower((string) $inviterStatus) !== 'active') {
+                            throw new \InvalidArgumentException('inviter_banned');
+                        }
+
+                        // 检查封禁状态
+                        if (function_exists('cfmod_resolve_user_ban_state')) {
+                            $banState = cfmod_resolve_user_ban_state($inviterId);
+                            if (!empty($banState['is_banned'])) {
+                                throw new \InvalidArgumentException('inviter_banned');
+                            }
+                        }
+
+                        // 检查邀请人是否达到邀请上限
+                        if (!CfRootdomainInviteService::checkInviterLimit($inviterId, $rootdomain)) {
+                            throw new \InvalidArgumentException('inviter_limit_reached');
+                        }
+
+                        // 验证通过，存储待记录信息，在注册成功后才调用
+                        $_POST['__rootdomain_invite_verified__'] = [
+                            'userid' => $userid,
+                            'rootdomain' => $rootdomain,
+                            'code' => $rootdomainInviteCode,
+                            'subdomain' => $fullsub,
+                            'email' => $clientEmail,
+                            'ip' => $clientIp,
+                        ];
+                        $rootdomainInviteVerified = true;
+                    } catch (\InvalidArgumentException $e) {
+                        $errorKey = $e->getMessage();
+                        $errorMessages = [
+                            'invalid_code' => '邀请码无效，请检查后重试。',
+                            'self_code' => '不能使用自己的邀请码。',
+                            'inviter_banned' => '邀请人账户状态异常，无法使用该邀请码。',
+                            'inviter_limit_reached' => '该邀请码已达使用上限。',
+                        ];
+                        $msg = self::actionText('rootdomain_invite.' . $errorKey, $errorMessages[$errorKey] ?? '邀请码验证失败。');
+                        $msg_type = 'danger';
+                        $registerError = $msg;
+                        $rootdomainInviteVerified = false;
+                    } catch (\Throwable $e) {
+                        $msg = self::actionText('rootdomain_invite.error', '邀请码验证失败：%s', [$e->getMessage()]);
+                        $msg_type = 'danger';
+                        $registerError = $msg;
+                        $rootdomainInviteVerified = false;
+                    }
+                }
+            }
+
+            if ($subprefix === '' || $rootdomain === '' || ($rootdomainInviteRequired && !$rootdomainInviteVerified)) {
+                if ($subprefix === '' || $rootdomain === '') {
+                    $msg = self::actionText('register.missing_fields', '请填写完整信息');
+                } else {
+                    $msg = self::actionText('rootdomain_invite.verification_required', '邀请码验证未通过，无法继续注册。');
+                }
                 $msg_type = 'danger';
                 $registerError = $msg;
             } elseif (is_object($quota) && intval($quota->max_count ?? 0) > 0 && intval($quota->used_count ?? 0) >= intval($quota->max_count ?? 0)) {
@@ -690,6 +790,29 @@ if($_POST['action'] == "register") {
 
                                                 if (function_exists('cloudflare_subdomain_log')) {
                                                     cloudflare_subdomain_log('client_register_subdomain', ['subdomain' => $fullsub, 'root' => $rootdomain], $userid, $created['id']);
+                                                }
+
+                                                // 处理根域名邀请码（注册成功后）
+                                                if (isset($_POST['__rootdomain_invite_verified__']) && is_array($_POST['__rootdomain_invite_verified__'])) {
+                                                    try {
+                                                        $inviteData = $_POST['__rootdomain_invite_verified__'];
+                                                        if (class_exists('CfRootdomainInviteService')) {
+                                                            CfRootdomainInviteService::validateAndUseInviteCode(
+                                                                (int) $inviteData['userid'],
+                                                                (string) $inviteData['rootdomain'],
+                                                                (string) $inviteData['code'],
+                                                                (string) $inviteData['subdomain'],
+                                                                (string) $inviteData['email'],
+                                                                (string) $inviteData['ip']
+                                                            );
+                                                        }
+                                                    } catch (\Throwable $e) {
+                                                        // 邀请码记录失败不影响注册结果，仅记录日志
+                                                        if (function_exists('cloudflare_subdomain_log')) {
+                                                            cloudflare_subdomain_log('rootdomain_invite_code_log_failed', ['error' => $e->getMessage()], $userid, $created['id']);
+                                                        }
+                                                    }
+                                                    unset($_POST['__rootdomain_invite_verified__']);
                                                 }
 
                                                 $msg = self::actionText('register.success_detail', "注册成功！域名 '%s' 已创建，现在您可以设置解析了", [$fullsub]);
