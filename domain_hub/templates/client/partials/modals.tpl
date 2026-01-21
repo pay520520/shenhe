@@ -762,6 +762,17 @@ $inviteRegMaxPerUser = intval($inviteRegistrationMaxPerUser ?? 0);
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var inviteRegRequiredModal = document.getElementById('inviteRegistrationRequiredModal');
+    if (inviteRegRequiredModal) {
+        var bsModal = new bootstrap.Modal(inviteRegRequiredModal);
+        bsModal.show();
+    }
+});
+</script>
+<?php endif; ?>
+
 <!-- 根域名邀请码模态框 -->
 <div class="modal fade" id="rootdomainInviteCodesModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -958,18 +969,10 @@ function showRootdomainInviteCodesModal() {
         bsModal.show();
     }
 }
-</script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var inviteRegRequiredModal = document.getElementById('inviteRegistrationRequiredModal');
-    if (inviteRegRequiredModal) {
-        var bsModal = new bootstrap.Modal(inviteRegRequiredModal);
-        bsModal.show();
-    }
-});
+window.showRootdomainInviteCodesModal = showRootdomainInviteCodesModal;
+window.copyRootdomainInviteCode = copyRootdomainInviteCode;
 </script>
-<?php endif; ?>
 
 <?php endif; ?>
 
