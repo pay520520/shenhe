@@ -761,6 +761,205 @@ $inviteRegMaxPerUser = intval($inviteRegistrationMaxPerUser ?? 0);
         </div>
     </div>
 </div>
+
+<!-- 根域名邀请码模态框 -->
+<div class="modal fade" id="rootdomainInviteCodesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-gift text-primary"></i> <?php echo $modalText('cfclient.rootdomain_invite.title', '根域名邀请码'); ?>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <?php
+                $rootdomainInviteCodes = $rootdomainInviteCodes ?? [];
+                $rootInviteRequiredMap = $rootInviteRequiredMap ?? [];
+                $rootdomainInviteMaxPerUser = $rootdomainInviteMaxPerUser ?? 0;
+                
+                // 过滤出需要邀请码的根域名
+                $inviteEnabledRoots = [];
+                foreach ($rootInviteRequiredMap as $root => $required) {
+                    if ($required) {
+                        $inviteEnabledRoots[] = $root;
+                    }
+                }
+                ?>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <?php if ($rootdomainInviteMaxPerUser > 0): ?>
+                        <?php echo $modalText('cfclient.rootdomain_invite.description_with_limit', '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，每个根域名最多可邀请 %s 个好友。邀请码使用后会自动刷新。', [$rootdomainInviteMaxPerUser]); ?>
+                    <?php else: ?>
+                        <?php echo $modalText('cfclient.rootdomain_invite.description', '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，好友使用后邀请码会自动刷新。'); ?>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (!empty($inviteEnabledRoots)): ?>
+                    <div class="row g-3">
+                        <?php foreach ($inviteEnabledRoots as $rootdomain): ?>
+                            <?php
+                            $inviteCodeData = $rootdomainInviteCodes[$rootdomain] ?? null;
+                            $inviteCode = $inviteCodeData ? ($inviteCodeData['invite_code'] ?? '') : '';
+                            
+                            // 如果用户还没有这个根域名的邀请码，自动生成
+                            if ($inviteCode === '' && ($userid ?? 0) > 0) {
+                                try {
+                                    if (class_exists('CfRootdomainInviteService')) {
+                                        $generated = CfRootdomainInviteService::getOrCreateInviteCode($userid, $rootdomain);
+                                        $inviteCode = $generated['invite_code'] ?? '';
+                                    }
+                                } catch (\Throwable $e) {
+                                    $inviteCode = '';
+                                }
+                            }
+                            
+                            // 获取该根域名已邀请人数
+                            $invitedCount = 0;
+                            try {
+                                if (class_exists('CfRootdomainInviteService') && ($userid ?? 0) > 0) {
+                                    $invitedCount = CfRootdomainInviteService::getUserInviteCount($userid, $rootdomain);
+                                }
+                            } catch (\Throwable $e) {
+                                $invitedCount = 0;
+                            }
+                            
+                            $remainingInvites = $rootdomainInviteMaxPerUser > 0 ? max(0, $rootdomainInviteMaxPerUser - $invitedCount) : -1;
+                            ?>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="fas fa-server text-success"></i>
+                                            <code><?php echo htmlspecialchars($rootdomain); ?></code>
+                                        </h6>
+                                        
+                                        <?php if ($inviteCode !== ''): ?>
+                                            <div class="mb-3">
+                                                <label class="form-label small text-muted">
+                                                    <?php echo $modalText('cfclient.rootdomain_invite.your_code', '您的邀请码'); ?>
+                                                </label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="text" class="form-control font-monospace" 
+                                                           value="<?php echo htmlspecialchars($inviteCode); ?>" 
+                                                           id="invite_code_modal_<?php echo htmlspecialchars($rootdomain); ?>" 
+                                                           readonly>
+                                                    <button class="btn btn-outline-primary" type="button" 
+                                                            onclick="copyRootdomainInviteCode('<?php echo htmlspecialchars($rootdomain, ENT_QUOTES); ?>')">
+                                                        <i class="fas fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-users"></i>
+                                                    <?php echo $modalText('cfclient.rootdomain_invite.invited_count', '已邀请：%s 人', [$invitedCount]); ?>
+                                                </small>
+                                                <?php if ($remainingInvites >= 0): ?>
+                                                    <small class="<?php echo $remainingInvites > 0 ? 'text-success' : 'text-danger'; ?>">
+                                                        <?php if ($remainingInvites > 0): ?>
+                                                            <i class="fas fa-check-circle"></i>
+                                                            <?php echo $modalText('cfclient.rootdomain_invite.remaining', '剩余：%s', [$remainingInvites]); ?>
+                                                        <?php else: ?>
+                                                            <i class="fas fa-exclamation-triangle"></i>
+                                                            <?php echo $modalText('cfclient.rootdomain_invite.limit_reached', '已达上限'); ?>
+                                                        <?php endif; ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="alert alert-warning mb-0">
+                                                <small>
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    <?php echo $modalText('cfclient.rootdomain_invite.code_not_generated', '邀请码生成失败，请刷新页面重试'); ?>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-secondary">
+                        <i class="fas fa-info-circle"></i>
+                        <?php echo $modalText('cfclient.rootdomain_invite.no_roots', '当前没有需要邀请码的根域名'); ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <?php echo $modalText('cfclient.modals.buttons.close', '关闭'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyRootdomainInviteCode(rootdomain) {
+    const inputId = 'invite_code_modal_' + rootdomain;
+    const input = document.getElementById(inputId);
+    if (!input) {
+        return;
+    }
+    
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            const btn = input.nextElementSibling;
+            const originalHTML = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        } else {
+            alert(cfLang('copyFailed', '复制失败，请手动复制'));
+        }
+    } catch (err) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(input.value).then(() => {
+                const btn = input.nextElementSibling;
+                const originalHTML = btn.innerHTML;
+                
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-primary');
+                }, 2000);
+            }).catch(() => {
+                alert(cfLang('copyFailed', '复制失败，请手动复制'));
+            });
+        } else {
+            alert(cfLang('browserNotSupport', '您的浏览器不支持自动复制，请手动复制邀请码'));
+        }
+    }
+}
+
+function showRootdomainInviteCodesModal() {
+    var modal = document.getElementById('rootdomainInviteCodesModal');
+    if (modal) {
+        var bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+}
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var inviteRegRequiredModal = document.getElementById('inviteRegistrationRequiredModal');

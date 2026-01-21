@@ -259,6 +259,8 @@ $_LANG['cfclient.actions.rootdomain_invite.self_code'] = 'You cannot use your ow
 $_LANG['cfclient.actions.rootdomain_invite.inviter_banned'] = 'Inviter account is inactive, cannot use this invite code.';
 $_LANG['cfclient.actions.rootdomain_invite.inviter_limit_reached'] = 'This invite code has reached its usage limit.';
 $_LANG['cfclient.actions.rootdomain_invite.error'] = 'Invite code verification failed: %s';
+$_LANG['cfclient.actions.rootdomain_invite.verification_required'] = 'Invite code verification failed, cannot proceed with registration.';
+$_LANG['cfclient.subdomains.button.rootdomain_invite'] = 'Root Domain Invites';
 
 $_LANG['cfclient.subdomains.button.renew.redeem'] = 'Redeem (charge ¥%s)';
 $_LANG['cfclient.subdomains.button.redeem_ticket'] = 'Request restoration';

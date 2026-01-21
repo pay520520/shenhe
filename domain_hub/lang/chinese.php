@@ -258,6 +258,8 @@ $_LANG['cfclient.actions.rootdomain_invite.self_code'] = '不能使用自己的�
 $_LANG['cfclient.actions.rootdomain_invite.inviter_banned'] = '邀请人账户状态异常，无法使用该邀请码。';
 $_LANG['cfclient.actions.rootdomain_invite.inviter_limit_reached'] = '该邀请码已达使用上限。';
 $_LANG['cfclient.actions.rootdomain_invite.error'] = '邀请码验证失败：%s';
+$_LANG['cfclient.actions.rootdomain_invite.verification_required'] = '邀请码验证未通过，无法继续注册。';
+$_LANG['cfclient.subdomains.button.rootdomain_invite'] = '根域名邀请';
 
 $_LANG['cfclient.subdomains.button.renew.redeem'] = '赎回期续费（扣费$%s）';
 $_LANG['cfclient.subdomains.button.redeem_ticket'] = '申请恢复域名';

@@ -24,6 +24,23 @@
                                 <i class="fas fa-user-plus"></i> <?php echo cfclient_lang('cfclient.subdomains.button.invite_registration', '邀请注册', [], true); ?>
                             </button>
                             <?php endif; ?>
+                            <?php
+                            // 检查是否有需要邀请码的根域名
+                            $hasRootdomainInvite = false;
+                            if (!empty($rootInviteRequiredMap)) {
+                                foreach ($rootInviteRequiredMap as $required) {
+                                    if ($required) {
+                                        $hasRootdomainInvite = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            ?>
+                            <?php if ($hasRootdomainInvite): ?>
+                            <button type="button" class="btn btn-outline-info" onclick="showRootdomainInviteCodesModal()">
+                                <i class="fas fa-gift"></i> <?php echo cfclient_lang('cfclient.subdomains.button.rootdomain_invite', '根域名邀请', [], true); ?>
+                            </button>
+                            <?php endif; ?>
                             <form class="row g-1 align-items-center mb-0 flex-grow-1" method="get" action="">
                                 <input type="hidden" name="m" value="<?php echo htmlspecialchars($moduleSlug); ?>">
                                 <?php
