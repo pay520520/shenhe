@@ -127,6 +127,9 @@ $orderSaveLabel = $lang['rootdomain_order_save'] ?? '保存排序';
                             <?php else: ?>
                             <br><span class="badge bg-light text-muted mt-1">正常</span>
                             <?php endif; ?>
+                            <?php if (!empty($rd->require_invite_code)): ?>
+                            <br><span class="badge bg-info mt-1"><i class="fas fa-user-shield"></i> 需邀请码</span>
+                            <?php endif; ?>
                         </td>
                         <td><?php echo date('Y-m-d H:i', strtotime($rd->created_at)); ?></td>
                         <td>
@@ -228,6 +231,22 @@ $orderSaveLabel = $lang['rootdomain_order_save'] ?? '保存排序';
                                     <label class="form-label">默认注册年限（年）</label>
                                     <input type="number" class="form-control" name="default_term_years" min="0" value="<?php echo $rdDefaultTerm; ?>">
                                     <div class="form-text">0 表示使用系统默认配置</div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-3"><i class="fas fa-user-shield"></i> 邀请注册控制</h6>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="require_invite_code_<?php echo $rd->id; ?>" name="require_invite_code" value="1" <?php echo !empty($rd->require_invite_code) ? 'checked' : ''; ?>>
+                                                <label class="form-check-label" for="require_invite_code_<?php echo $rd->id; ?>">
+                                                    <strong>需要邀请码才能注册</strong>
+                                                </label>
+                                            </div>
+                                            <div class="form-text text-muted mt-2">
+                                                <i class="fas fa-info-circle"></i> 启用后，用户注册此根域名的子域名时必须输入有效的邀请码。每个邀请码只能使用一次，使用后会自动刷新。
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

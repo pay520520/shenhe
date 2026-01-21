@@ -358,6 +358,37 @@ function cfmod_table_exists(string $table): bool {
     }
 }
 
+function cfmod_rootdomain_requires_invite(string $rootdomain): bool {
+    static $cache = [];
+    $normalized = cfmod_normalize_rootdomain($rootdomain);
+    if (isset($cache[$normalized])) {
+        return $cache[$normalized];
+    }
+    
+    try {
+        if (!cfmod_table_exists('mod_cloudflare_rootdomains')) {
+            $cache[$normalized] = false;
+            return false;
+        }
+        
+        $row = Capsule::table('mod_cloudflare_rootdomains')
+            ->whereRaw('LOWER(domain) = ?', [$normalized])
+            ->first();
+        
+        if (!$row) {
+            $cache[$normalized] = false;
+            return false;
+        }
+        
+        $requiresInvite = !empty($row->require_invite_code);
+        $cache[$normalized] = $requiresInvite;
+        return $requiresInvite;
+    } catch (\Throwable $e) {
+        $cache[$normalized] = false;
+        return false;
+    }
+}
+
 function cfmod_get_known_rootdomains(?array $moduleSettings = null): array {
     static $cache = null;
     if ($cache !== null) {

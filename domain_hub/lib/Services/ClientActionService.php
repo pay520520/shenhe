@@ -597,7 +597,7 @@ if($_POST['action'] == "register") {
                                 $dbHasRoots = Capsule::table('mod_cloudflare_rootdomains')->count() > 0;
                                 if ($dbHasRoots) {
                                     $st = Capsule::table('mod_cloudflare_rootdomains')
-                                        ->select('status')
+                                        ->select('status', 'require_invite_code')
                                         ->whereRaw('LOWER(domain)=?', [strtolower($rootdomain)])
                                         ->first();
                                     if ($st && ($st->status ?? '') !== 'active') {
@@ -605,6 +605,38 @@ if($_POST['action'] == "register") {
                                         $msg_type = 'danger';
                                         $registerError = $msg;
                                         throw new Exception('suspended rootdomain');
+                                    }
+                                    if ($st && !empty($st->require_invite_code)) {
+                                        $inputInviteCode = strtoupper(trim($_POST['invite_code_for_register'] ?? ''));
+                                        if ($inputInviteCode === '') {
+                                            $msg = self::actionText('register.invite_code_required', '该根域名需要邀请码才能注册，请输入有效的邀请码');
+                                            $msg_type = 'danger';
+                                            $registerError = $msg;
+                                            throw new Exception('invite code required');
+                                        }
+                                        $inviteCodeRow = Capsule::table('mod_cloudflare_domain_invite_codes')
+                                            ->where('code', $inputInviteCode)
+                                            ->where('rootdomain', strtolower($rootdomain))
+                                            ->first();
+                                        if (!$inviteCodeRow) {
+                                            $msg = self::actionText('register.invite_code_invalid', '邀请码不正确或不适用于此根域名');
+                                            $msg_type = 'danger';
+                                            $registerError = $msg;
+                                            throw new Exception('invalid invite code');
+                                        }
+                                        if (!empty($inviteCodeRow->used_at)) {
+                                            $msg = self::actionText('register.invite_code_used', '该邀请码已被使用，请使用新的邀请码');
+                                            $msg_type = 'danger';
+                                            $registerError = $msg;
+                                            throw new Exception('invite code already used');
+                                        }
+                                        Capsule::table('mod_cloudflare_domain_invite_codes')
+                                            ->where('id', $inviteCodeRow->id)
+                                            ->update([
+                                                'used_by_userid' => $userid,
+                                                'used_at' => date('Y-m-d H:i:s'),
+                                                'updated_at' => date('Y-m-d H:i:s'),
+                                            ]);
                                     }
                                 }
                             } catch (Exception $e) {}
@@ -691,6 +723,29 @@ if($_POST['action'] == "register") {
                                                 if (function_exists('cloudflare_subdomain_log')) {
                                                     cloudflare_subdomain_log('client_register_subdomain', ['subdomain' => $fullsub, 'root' => $rootdomain], $userid, $created['id']);
                                                 }
+                                                
+                                                try {
+                                                    $rootRow = Capsule::table('mod_cloudflare_rootdomains')
+                                                        ->select('require_invite_code')
+                                                        ->whereRaw('LOWER(domain)=?', [strtolower($rootdomain)])
+                                                        ->first();
+                                                    if ($rootRow && !empty($rootRow->require_invite_code)) {
+                                                        $newInviteCode = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10));
+                                                        $attempts = 0;
+                                                        while (Capsule::table('mod_cloudflare_domain_invite_codes')->where('code', $newInviteCode)->exists() && $attempts < 5) {
+                                                            $newInviteCode = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10));
+                                                            $attempts++;
+                                                        }
+                                                        Capsule::table('mod_cloudflare_domain_invite_codes')->insert([
+                                                            'userid' => $userid,
+                                                            'code' => $newInviteCode,
+                                                            'rootdomain' => strtolower($rootdomain),
+                                                            'subdomain_id' => $created['id'],
+                                                            'created_at' => date('Y-m-d H:i:s'),
+                                                            'updated_at' => date('Y-m-d H:i:s'),
+                                                        ]);
+                                                    }
+                                                } catch (\Throwable $ignored) {}
 
                                                 $msg = self::actionText('register.success_detail', "注册成功！域名 '%s' 已创建，现在您可以设置解析了", [$fullsub]);
                                                 $msg_type = 'success';

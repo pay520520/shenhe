@@ -20,6 +20,7 @@
         }
 
         const ROOT_LIMIT_MAP = <?php echo json_encode($rootLimitMap, CFMOD_SAFE_JSON_FLAGS); ?>;
+        const ROOT_INVITE_REQUIRED_MAP = <?php echo json_encode($rootInviteRequiredMap ?? [], CFMOD_SAFE_JSON_FLAGS); ?>;
         const rootLimitHint = document.getElementById('register_limit_hint');
 const dnsUnlockFeatureEnabled = <?php echo !empty($dnsUnlockFeatureEnabled) ? 'true' : 'false'; ?>;
 const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnlockRequired) ? 'true' : 'false'; ?>;
@@ -27,6 +28,9 @@ const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnloc
         // 注册根域名后缀实时显示
         const rootSelect = document.getElementById('register_rootdomain');
         const rootSuffix = document.getElementById('register_root_suffix');
+        const inviteCodeField = document.getElementById('register_invite_code_field');
+        const inviteCodeInput = document.getElementById('register_invite_code');
+        
         const updateRootLimitHint = () => {
             if (!rootLimitHint || !rootSelect) {
                 return;
@@ -41,15 +45,39 @@ const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnloc
                 rootLimitHint.style.display = 'none';
             }
         };
+        
+        const updateInviteCodeField = () => {
+            if (!inviteCodeField || !rootSelect) {
+                return;
+            }
+            const selected = (rootSelect.value || '').toLowerCase();
+            const requiresInvite = ROOT_INVITE_REQUIRED_MAP[selected] || false;
+            
+            if (requiresInvite) {
+                inviteCodeField.style.display = '';
+                if (inviteCodeInput) {
+                    inviteCodeInput.setAttribute('required', 'required');
+                }
+            } else {
+                inviteCodeField.style.display = 'none';
+                if (inviteCodeInput) {
+                    inviteCodeInput.removeAttribute('required');
+                    inviteCodeInput.value = '';
+                }
+            }
+        };
+        
         if (rootSelect && rootSuffix) {
             const updateSuffix = () => {
                 rootSuffix.textContent = rootSelect.value || cfLang('rootSuffixPlaceholder', '根域名');
                 updateRootLimitHint();
+                updateInviteCodeField();
             };
             rootSelect.addEventListener('change', updateSuffix);
             updateSuffix();
         } else {
             updateRootLimitHint();
+            updateInviteCodeField();
         }
 
         // 表单验证

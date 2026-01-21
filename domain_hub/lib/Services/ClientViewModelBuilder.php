@@ -178,6 +178,7 @@ class CfClientViewModelBuilder
 
         $globals['roots'] = self::loadRootDomains();
         $globals['rootLimitMap'] = self::loadRootLimitMap();
+        $globals['rootInviteRequiredMap'] = self::loadRootInviteRequiredMap();
         $globals['rootMaintenanceMap'] = self::loadRootMaintenanceMap();
 
         $globals['userid'] = $userId;
@@ -396,6 +397,26 @@ class CfClientViewModelBuilder
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    private static function loadRootInviteRequiredMap(): array
+    {
+        $map = [];
+        try {
+            $rows = Capsule::table('mod_cloudflare_rootdomains')
+                ->select('domain', 'require_invite_code')
+                ->where('status', 'active')
+                ->get();
+            foreach ($rows as $row) {
+                $domain = strtolower(trim((string)($row->domain ?? '')));
+                if ($domain !== '') {
+                    $map[$domain] = !empty($row->require_invite_code);
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return $map;
     }
 
     private static function loadRootMaintenanceMap(): array

@@ -313,6 +313,12 @@ class CfModuleInstaller
                                 $table->boolean('maintenance')->default(0)->after('status');
                             });
                         }
+                        // 添加邀请注册控制字段
+                        if (!Capsule::schema()->hasColumn('mod_cloudflare_rootdomains', 'require_invite_code')) {
+                            Capsule::schema()->table('mod_cloudflare_rootdomains', function ($table) {
+                                $table->boolean('require_invite_code')->default(0)->after('maintenance');
+                            });
+                        }
                     } catch (\Throwable $e) {
                         // ignore schema alteration errors
                     }
@@ -422,6 +428,26 @@ class CfModuleInstaller
                         $table->index('invitee_userid');
                         $table->index('invitee_email');
                         $table->index('invite_code');
+                        $table->index('created_at');
+                    });
+                }
+        
+                // 域名注册邀请码表（如果不存在）
+                if (!Capsule::schema()->hasTable('mod_cloudflare_domain_invite_codes')) {
+                    Capsule::schema()->create('mod_cloudflare_domain_invite_codes', function ($table) {
+                        $table->increments('id');
+                        $table->integer('userid')->unsigned();
+                        $table->string('code', 20)->unique();
+                        $table->string('rootdomain', 255);
+                        $table->integer('subdomain_id')->unsigned()->nullable();
+                        $table->integer('used_by_userid')->unsigned()->nullable();
+                        $table->dateTime('used_at')->nullable();
+                        $table->timestamps();
+                        $table->index('userid');
+                        $table->index('code');
+                        $table->index('rootdomain');
+                        $table->index('used_by_userid');
+                        $table->index('used_at');
                         $table->index('created_at');
                     });
                 }
