@@ -325,5 +325,21 @@ return [
     'dns_unlock_logs_used_time' => '使用时间',
     'dns_unlock_logs_empty' => '暂无解锁使用记录',
 
+    // Rootdomain invite logs
+    'rootdomain_invite_logs_title' => '根域名邀请注册日志',
+    'rootdomain_invite_logs_search_placeholder' => '搜索',
+    'rootdomain_invite_logs_search_button' => '搜索',
+    'rootdomain_invite_logs_reset_button' => '重置',
+    'rootdomain_invite_logs_rootdomain' => '根域名',
+    'rootdomain_invite_logs_code' => '邀请码',
+    'rootdomain_invite_logs_inviter' => '邀请人',
+    'rootdomain_invite_logs_invitee' => '被邀请人',
+    'rootdomain_invite_logs_invitee_email' => '邮箱',
+    'rootdomain_invite_logs_subdomain' => '注册域名',
+    'rootdomain_invite_logs_invitee_ip' => 'IP',
+    'rootdomain_invite_logs_time' => '注册时间',
+    'rootdomain_invite_logs_empty' => '暂无邀请注册记录',
+    'rootdomain_invite_logs_description' => '此日志记录用户使用邀请码注册根域名二级域名的情况。',
+
     // Existing invites / runtime texts might expect filter label etc.
 ];

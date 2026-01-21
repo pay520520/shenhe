@@ -20,6 +20,7 @@
         }
 
         const ROOT_LIMIT_MAP = <?php echo json_encode($rootLimitMap, CFMOD_SAFE_JSON_FLAGS); ?>;
+        const ROOT_INVITE_REQUIRED_MAP = <?php echo json_encode($rootInviteRequiredMap ?? [], CFMOD_SAFE_JSON_FLAGS); ?>;
         const rootLimitHint = document.getElementById('register_limit_hint');
 const dnsUnlockFeatureEnabled = <?php echo !empty($dnsUnlockFeatureEnabled) ? 'true' : 'false'; ?>;
 const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnlockRequired) ? 'true' : 'false'; ?>;
@@ -27,6 +28,9 @@ const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnloc
         // 注册根域名后缀实时显示
         const rootSelect = document.getElementById('register_rootdomain');
         const rootSuffix = document.getElementById('register_root_suffix');
+        const inviteCodeContainer = document.getElementById('rootdomain_invite_code_container');
+        const inviteCodeInput = document.getElementById('rootdomain_invite_code_input');
+        
         const updateRootLimitHint = () => {
             if (!rootLimitHint || !rootSelect) {
                 return;
@@ -41,15 +45,34 @@ const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnloc
                 rootLimitHint.style.display = 'none';
             }
         };
+        
+        const updateInviteCodeRequirement = () => {
+            if (!inviteCodeContainer || !inviteCodeInput || !rootSelect) {
+                return;
+            }
+            const selected = (rootSelect.value || '').toLowerCase();
+            const required = ROOT_INVITE_REQUIRED_MAP[selected] || false;
+            if (required) {
+                inviteCodeContainer.style.display = '';
+                inviteCodeInput.setAttribute('required', 'required');
+            } else {
+                inviteCodeContainer.style.display = 'none';
+                inviteCodeInput.removeAttribute('required');
+                inviteCodeInput.value = '';
+            }
+        };
+        
         if (rootSelect && rootSuffix) {
             const updateSuffix = () => {
                 rootSuffix.textContent = rootSelect.value || cfLang('rootSuffixPlaceholder', '根域名');
                 updateRootLimitHint();
+                updateInviteCodeRequirement();
             };
             rootSelect.addEventListener('change', updateSuffix);
             updateSuffix();
         } else {
             updateRootLimitHint();
+            updateInviteCodeRequirement();
         }
 
         // 表单验证
@@ -93,6 +116,25 @@ const dnsUnlockRequired = dnsUnlockFeatureEnabled && <?php echo !empty($dnsUnloc
                 alert(cfLang('registerForbiddenPrefix', '该前缀被禁止使用，请选择其他前缀'));
                 subdomain.focus();
                 return;
+            }
+            
+            // 检查邀请码（如果需要）
+            const selectedRoot = (rootdomain.value || '').toLowerCase();
+            const inviteRequired = ROOT_INVITE_REQUIRED_MAP[selectedRoot] || false;
+            if (inviteRequired) {
+                const inviteCodeValue = (inviteCodeInput ? inviteCodeInput.value.trim() : '');
+                if (!inviteCodeValue) {
+                    e.preventDefault();
+                    alert(cfLang('registerInviteCodeRequired', '该根域名需要邀请码，请输入邀请码'));
+                    if (inviteCodeInput) inviteCodeInput.focus();
+                    return;
+                }
+                if (inviteCodeValue.length !== 10) {
+                    e.preventDefault();
+                    alert(cfLang('registerInviteCodeLength', '邀请码必须是10位字符'));
+                    if (inviteCodeInput) inviteCodeInput.focus();
+                    return;
+                }
             }
         });
         

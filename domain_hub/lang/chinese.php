@@ -236,6 +236,29 @@ $_LANG['cfclient.js.invite_reg_copy_success'] = '邀请码已复制';
 $_LANG['cfclient.js.invite_reg_copy_failed'] = '复制失败，请手动复制';
 $_LANG['cfclient.invite_registration.auto_unlocked'] = '您已自动获得访问权限（老用户特权）';
 $_LANG['cfclient.invite_registration.no_limit'] = '不限制';
+
+// 根域名邀请码相关
+$_LANG['cfclient.rootdomain_invite.title'] = '根域名邀请码';
+$_LANG['cfclient.rootdomain_invite.description'] = '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，好友使用后邀请码会自动刷新。';
+$_LANG['cfclient.rootdomain_invite.description_with_limit'] = '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，每个根域名最多可邀请 %s 个好友。邀请码使用后会自动刷新。';
+$_LANG['cfclient.rootdomain_invite.your_code'] = '您的邀请码';
+$_LANG['cfclient.rootdomain_invite.invited_count'] = '已邀请：%s 人';
+$_LANG['cfclient.rootdomain_invite.remaining'] = '剩余：%s';
+$_LANG['cfclient.rootdomain_invite.limit_reached'] = '已达上限';
+$_LANG['cfclient.rootdomain_invite.code_not_generated'] = '邀请码生成失败，请刷新页面重试';
+$_LANG['cfclient.rootdomain_invite.no_roots'] = '当前没有需要邀请码的根域名';
+$_LANG['cfclient.modals.register.label.invite_code'] = '邀请码';
+$_LANG['cfclient.modals.register.placeholder.invite_code'] = '请输入10位邀请码';
+$_LANG['cfclient.modals.register.hint.invite_code'] = '该根域名需要邀请码才能注册，请向已注册该根域名的用户获取邀请码';
+$_LANG['cfclient.js.register_invite_code_required'] = '该根域名需要邀请码，请输入邀请码';
+$_LANG['cfclient.js.register_invite_code_length'] = '邀请码必须是10位字符';
+$_LANG['cfclient.actions.rootdomain_invite.code_required'] = '该根域名需要邀请码才能注册，请输入邀请码。';
+$_LANG['cfclient.actions.rootdomain_invite.invalid_code'] = '邀请码无效，请检查后重试。';
+$_LANG['cfclient.actions.rootdomain_invite.self_code'] = '不能使用自己的邀请码。';
+$_LANG['cfclient.actions.rootdomain_invite.inviter_banned'] = '邀请人账户状态异常，无法使用该邀请码。';
+$_LANG['cfclient.actions.rootdomain_invite.inviter_limit_reached'] = '该邀请码已达使用上限。';
+$_LANG['cfclient.actions.rootdomain_invite.error'] = '邀请码验证失败：%s';
+
 $_LANG['cfclient.subdomains.button.renew.redeem'] = '赎回期续费（扣费$%s）';
 $_LANG['cfclient.subdomains.button.redeem_ticket'] = '申请恢复域名';
 $_LANG['cfclient.subdomains.details.title'] = 'DNS解析记录';
