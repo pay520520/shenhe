@@ -16,7 +16,7 @@ class CfRootdomainInviteService
     private const TABLE_LOGS = 'mod_cloudflare_rootdomain_invite_logs';
 
     /**
-     * 确保表存在
+     * 确保表存在并且字段完整
      */
     public static function ensureTables(): void
     {
@@ -56,6 +56,13 @@ class CfRootdomainInviteService
                     $table->index('invitee_email');
                     $table->index('created_at');
                 });
+            } else {
+                // 表存在但可能缺少 subdomain 字段（旧版本升级）
+                if (!Capsule::schema()->hasColumn(self::TABLE_LOGS, 'subdomain')) {
+                    Capsule::schema()->table(self::TABLE_LOGS, function ($table) {
+                        $table->string('subdomain', 255)->nullable()->after('invitee_email');
+                    });
+                }
             }
         } catch (\Throwable $e) {
             // ignore schema creation errors
