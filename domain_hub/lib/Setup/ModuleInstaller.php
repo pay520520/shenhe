@@ -758,6 +758,61 @@ class CfModuleInstaller
                     });
                 }
         
+                // 创建域名邀请码表
+                if (!Capsule::schema()->hasTable('mod_cloudflare_domain_invite_codes')) {
+                    Capsule::schema()->create('mod_cloudflare_domain_invite_codes', function ($table) {
+                        $table->increments('id');
+                        $table->integer('userid')->unsigned()->comment('邀请人用户ID');
+                        $table->string('rootdomain', 191)->comment('根域名');
+                        $table->string('code', 20)->comment('邀请码（10位）');
+                        $table->integer('used_count')->unsigned()->default(0)->comment('已使用次数');
+                        $table->integer('max_uses')->unsigned()->default(1)->comment('最大使用次数');
+                        $table->dateTime('expires_at')->nullable()->comment('过期时间');
+                        $table->string('status', 20)->default('active')->comment('状态：active|exhausted|expired');
+                        $table->timestamps();
+        
+                        // 索引
+                        $table->unique('code', 'idx_code_unique');
+                        $table->index(['userid', 'rootdomain'], 'idx_userid_rootdomain');
+                        $table->index('status');
+                        $table->index('expires_at');
+                    });
+                }
+        
+                // 创建域名邀请日志表
+                if (!Capsule::schema()->hasTable('mod_cloudflare_domain_invite_logs')) {
+                    Capsule::schema()->create('mod_cloudflare_domain_invite_logs', function ($table) {
+                        $table->increments('id');
+                        $table->integer('invite_code_id')->unsigned()->nullable()->comment('邀请码ID');
+                        $table->string('code', 20)->comment('使用的邀请码');
+                        $table->integer('inviter_userid')->unsigned()->comment('邀请人ID');
+                        $table->integer('invitee_userid')->unsigned()->comment('被邀请人ID');
+                        $table->string('invitee_email', 191)->nullable()->comment('被邀请人邮箱');
+                        $table->string('rootdomain', 191)->comment('根域名');
+                        $table->string('subdomain', 191)->comment('注册的子域名');
+                        $table->integer('subdomain_id')->unsigned()->nullable()->comment('子域名ID');
+                        $table->string('ip_address', 45)->nullable()->comment('注册IP');
+                        $table->dateTime('created_at');
+        
+                        // 索引
+                        $table->index('code');
+                        $table->index('inviter_userid');
+                        $table->index('invitee_userid');
+                        $table->index('rootdomain');
+                        $table->index('invitee_email');
+                        $table->index('created_at');
+                    });
+                }
+        
+                // 为根域名表添加邀请码开关字段
+                if (Capsule::schema()->hasTable('mod_cloudflare_rootdomains')) {
+                    if (!Capsule::schema()->hasColumn('mod_cloudflare_rootdomains', 'require_invite_code')) {
+                        Capsule::schema()->table('mod_cloudflare_rootdomains', function ($table) {
+                            $table->boolean('require_invite_code')->default(0)->after('per_user_limit')->comment('是否需要邀请码注册');
+                        });
+                    }
+                }
+        
                 try {
                     cfmod_sync_default_provider_account(cf_get_module_settings_cached());
                 } catch (\Throwable $ignored) {
@@ -810,6 +865,8 @@ class CfModuleInstaller
                 Capsule::schema()->dropIfExists('mod_cloudflare_whois_rate_limit');
                 Capsule::schema()->dropIfExists('mod_cloudflare_vpn_cache');
                 Capsule::schema()->dropIfExists('mod_cloudflare_provider_accounts');
+                Capsule::schema()->dropIfExists('mod_cloudflare_domain_invite_codes');
+                Capsule::schema()->dropIfExists('mod_cloudflare_domain_invite_logs');
                 return ['status'=>'success','description'=>'插件已完全卸载，数据已删除'];
             } catch (\Exception $e) {
                 return ['status'=>'error','description'=>'插件卸载失败: '.$e->getMessage()];

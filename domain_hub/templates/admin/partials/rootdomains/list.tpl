@@ -83,6 +83,7 @@ $orderSaveLabel = $lang['rootdomain_order_save'] ?? '保存排序';
                         <th>最大数量</th>
                         <th>单用户上限</th>
                         <th>默认年限</th>
+                        <th>邀请注册</th>
                         <th>描述</th>
                         <th>状态</th>
                         <th>创建时间</th>
@@ -119,6 +120,15 @@ $orderSaveLabel = $lang['rootdomain_order_save'] ?? '保存排序';
                         <td><?php echo intval($rd->max_subdomains ?? 1000); ?></td>
                         <td><?php echo (intval($rd->per_user_limit ?? 0) > 0) ? intval($rd->per_user_limit) : '不限'; ?></td>
                         <td><?php echo $rdDefaultTerm > 0 ? ($rdDefaultTerm . ' 年') : '沿用全局'; ?></td>
+                        <td>
+                            <?php if (!empty($rd->require_invite_code)): ?>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-key"></i> 需要
+                                </span>
+                            <?php else: ?>
+                                <span class="badge bg-secondary">不需要</span>
+                            <?php endif; ?>
+                        </td>
                         <td><?php echo htmlspecialchars($rd->description ?? ''); ?></td>
                         <td>
                             <span class="badge bg-<?php echo $rd->status==='active'?'success':'secondary'; ?>"><?php echo $rd->status==='active'?'可注册':'已停止注册'; ?></span>
@@ -228,6 +238,18 @@ $orderSaveLabel = $lang['rootdomain_order_save'] ?? '保存排序';
                                     <label class="form-label">默认注册年限（年）</label>
                                     <input type="number" class="form-control" name="default_term_years" min="0" value="<?php echo $rdDefaultTerm; ?>">
                                     <div class="form-text">0 表示使用系统默认配置</div>
+                                </div>
+                                <div class="col-md-12">
+                                    <hr>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="require_invite_code_<?php echo $rd->id; ?>" name="require_invite_code" value="1" <?php echo !empty($rd->require_invite_code) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="require_invite_code_<?php echo $rd->id; ?>">
+                                            <strong>需要邀请码注册</strong>
+                                        </label>
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle"></i> 开启后，用户注册该根域名下的子域名时必须输入邀请码。每个用户会自动获得一个邀请码，可以分享给好友使用。
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -29,6 +29,13 @@ class CfAdminController
             cfmod_ensure_admin_csrf_seed();
         }
 
+        // 处理邀请日志查看（GET请求，无需CSRF）
+        $action = (string)($_REQUEST['action'] ?? '');
+        if ($action === 'view_domain_invite_logs') {
+            $this->handleViewDomainInviteLogs();
+            return;
+        }
+
         $this->handleAction();
 
         $cfAdminViewModel = $this->buildViewModel($vars);
@@ -566,6 +573,49 @@ class CfAdminController
             $redirectUrl = 'addonmodules.php?module=' . (defined('CF_MODULE_NAME') ? CF_MODULE_NAME : 'domain_hub');
         }
         header('Location: ' . $redirectUrl);
+        exit;
+    }
+
+    private function handleViewDomainInviteLogs(): void
+    {
+        // 读取搜索参数
+        $filters = [];
+        if (!empty($_GET['search_code'])) {
+            $filters['code'] = trim((string)$_GET['search_code']);
+        }
+        if (!empty($_GET['search_domain'])) {
+            $filters['rootdomain'] = trim((string)$_GET['search_domain']);
+        }
+        if (!empty($_GET['search_email'])) {
+            $filters['invitee_email'] = trim((string)$_GET['search_email']);
+        }
+
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = 50;
+
+        // 获取邀请日志
+        $inviteLogs = ['logs' => [], 'total' => 0, 'page' => 1, 'perPage' => $perPage, 'totalPages' => 0];
+        if (class_exists('CfDomainInviteService')) {
+            try {
+                $inviteService = CfDomainInviteService::instance();
+                $inviteLogs = $inviteService->getInviteLogs($filters, $page, $perPage);
+            } catch (\Throwable $e) {
+                $inviteLogs['error'] = $e->getMessage();
+            }
+        }
+
+        // 构建ViewModel
+        $cfAdminViewModel = [
+            'domainInviteLogs' => $inviteLogs,
+            'currentView' => 'domain_invite_logs',
+        ];
+
+        // 包含模板
+        $modulelink = 'addonmodules.php?module=' . (defined('CF_MODULE_NAME') ? CF_MODULE_NAME : 'domain_hub');
+        $version = '1.0';
+        $LANG = [];
+
+        include __DIR__ . '/../../templates/admin_invite_logs.tpl';
         exit;
     }
 }

@@ -1769,6 +1769,14 @@ function domain_hub_config() {
                 "Default" => "no",
                 "Description" => "开启后，用户添加/修改/删除DNS记录时也将检测VPN/代理。",
             ],
+            // 域名邀请码配置
+            "max_domain_invites_per_user" => [
+                "FriendlyName" => "每人最多可邀请好友数",
+                "Type" => "text",
+                "Size" => "4",
+                "Default" => "10",
+                "Description" => "限制每个用户通过邀请码最多可邀请多少个好友注册域名（0 表示无限制）。注意：这是针对每个根域名的限制。",
+            ],
         ]
     ];
 }

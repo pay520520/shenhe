@@ -665,6 +665,7 @@ class CfAdminActionService
             }
             $zoneIdInput = trim($_POST['cloudflare_zone_id'] ?? '');
             $descriptionInput = trim($_POST['description'] ?? '');
+            $requireInviteCode = isset($_POST['require_invite_code']) && $_POST['require_invite_code'] === '1' ? 1 : 0;
             $updatePayload = [
                 'cloudflare_zone_id' => $zoneIdInput !== '' ? $zoneIdInput : null,
                 'description' => $descriptionInput !== '' ? $descriptionInput : null,
@@ -674,6 +675,16 @@ class CfAdminActionService
                 'provider_account_id' => $providerIdForUpdate,
                 'updated_at' => date('Y-m-d H:i:s'),
             ];
+            
+            // 如果数据库表支持，添加邀请码开关
+            try {
+                if (Capsule::schema()->hasColumn('mod_cloudflare_rootdomains', 'require_invite_code')) {
+                    $updatePayload['require_invite_code'] = $requireInviteCode;
+                }
+            } catch (\Throwable $e) {
+                // ignore column check failures
+            }
+            
             Capsule::table('mod_cloudflare_rootdomains')->where('id', $rootId)->update($updatePayload);
             if (function_exists('cfmod_clear_rootdomain_limits_cache')) {
                 cfmod_clear_rootdomain_limits_cache();

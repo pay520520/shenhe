@@ -24,8 +24,28 @@ class CfSubdomainService
         return self::$instance;
     }
 
-    public function atomicRegisterSubdomain(int $userid, string $fullDomain, string $rootdomain, string $zoneId, array $settings, array $extraData = []): array
+    public function atomicRegisterSubdomain(int $userid, string $fullDomain, string $rootdomain, string $zoneId, array $settings, array $extraData = [], ?string $inviteCode = null): array
     {
+        $rootLower = strtolower($rootdomain);
+        
+        // 检查是否需要邀请码
+        if (class_exists('CfDomainInviteService')) {
+            $inviteService = CfDomainInviteService::instance();
+            if ($inviteService->isInviteRequired($rootLower)) {
+                if (empty($inviteCode)) {
+                    throw new \RuntimeException('该根域名需要邀请码才能注册');
+                }
+
+                $validation = $inviteService->validateInviteCode($inviteCode, $rootLower, $userid);
+                if (!$validation['valid']) {
+                    throw new \RuntimeException($validation['error']);
+                }
+
+                // 保存邀请信息以便后续使用
+                $extraData['_invite_validation'] = $validation;
+            }
+        }
+        
         $baseMax = max(0, intval($settings['max_subdomain_per_user'] ?? 0));
         $inviteLimit = intval($settings['invite_bonus_limit_global'] ?? 5);
         if ($inviteLimit <= 0) {
@@ -38,7 +58,6 @@ class CfSubdomainService
         }
         $now = date('Y-m-d H:i:s');
         $fullLower = strtolower($fullDomain);
-        $rootLower = strtolower($rootdomain);
 
         $resolvedProviderAccountId = $extraData['provider_account_id'] ?? null;
         if (!is_numeric($resolvedProviderAccountId) || (int) $resolvedProviderAccountId <= 0) {
@@ -142,6 +161,10 @@ class CfSubdomainService
                     throw new CfAtomicAlreadyRegisteredException('already_registered');
                 }
 
+                // 提取邀请验证信息（不保存到数据库）
+                $inviteValidation = $extraData['_invite_validation'] ?? null;
+                unset($extraData['_invite_validation']);
+                
                 $data = array_merge([
                     'userid' => $userid,
                     'subdomain' => $fullLower,
@@ -163,6 +186,26 @@ class CfSubdomainService
                     'updated_at' => $now,
                 ]);
                 $quota->used_count = $usedCount + 1;
+
+                // 如果使用了邀请码，记录日志
+                if ($inviteValidation && class_exists('CfDomainInviteService')) {
+                    try {
+                        $inviteService = CfDomainInviteService::instance();
+                        $inviteService->useInviteCode(
+                            $inviteValidation['invite_id'],
+                            $inviteValidation['inviter_userid'],
+                            $userid,
+                            $rootLower,
+                            $fullLower,
+                            $id
+                        );
+                    } catch (\Throwable $e) {
+                        // 邀请码记录失败不影响注册，但需要记录日志
+                        if (function_exists('cfmod_report_exception')) {
+                            cfmod_report_exception('domain_invite_log_failed', $e);
+                        }
+                    }
+                }
 
                 $reportedMax = intval($quota->max_count ?? ($isPrivileged ? $privilegedLimit : $baseMax));
 

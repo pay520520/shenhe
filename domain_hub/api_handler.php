@@ -171,6 +171,27 @@ function api_handle_subdomain_register(array $data, $keyRow, array $settings): a
         return [$code, $result];
     }
 
+    // 检查是否需要邀请码
+    $inviteCode = trim((string)($data['invite_code'] ?? ''));
+    if (class_exists('CfDomainInviteService')) {
+        $inviteService = CfDomainInviteService::instance();
+        
+        if ($inviteService->isInviteRequired($root)) {
+            if ($inviteCode === '') {
+                $code = 400;
+                $result = ['error' => 'invite code required', 'message' => '该根域名需要邀请码才能注册'];
+                return [$code, $result];
+            }
+
+            $validation = $inviteService->validateInviteCode($inviteCode, $root, $keyRow->userid);
+            if (!$validation['valid']) {
+                $code = 400;
+                $result = ['error' => 'invalid invite code', 'message' => $validation['error']];
+                return [$code, $result];
+            }
+        }
+    }
+
     try {
         $existsLocal = Capsule::table('mod_cloudflare_subdomain')
             ->whereRaw('LOWER(subdomain)=?', [$full])
@@ -210,7 +231,7 @@ function api_handle_subdomain_register(array $data, $keyRow, array $settings): a
             'dns_record_id' => null,
             'notes' => '已注册，等待解析设置',
             'provider_account_id' => $providerAccountId > 0 ? $providerAccountId : null,
-        ]);
+        ], $inviteCode);
         if (is_object($quota)) {
             $quota->used_count = $created['used_count'];
             $quota->max_count = $created['max_count'];
