@@ -1,0 +1,126 @@
+# WHMCS Domain Hub Module - Git Ignore Rules
+
+# ================================
+# Temporary Development Files
+# ================================
+
+# Temporary documents
+*_temp.md
+*_临时.md
+*_测试.md
+*_草稿.md
+TEMP_*.md
+TODO_*.md
+DRAFT_*.md
+BUG_FIX_*.md
+CODE_REVIEW_*.md
+FIX_*.md
+CLEANUP_*.md
+
+# Temporary scripts
+*_temp.php
+*_test.php
+test_*.php
+debug_*.php
+性能*.php
+临时*.php
+检查*.php
+
+# Temporary SQL
+*_temp.sql
+*_test.sql
+临时*.sql
+优化*.sql
+
+# ================================
+# Development Tools
+# ================================
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# ================================
+# Logs and Cache
+# ================================
+
+# Log files
+*.log
+logs/
+error.log
+debug.log
+
+# Cache
+cache/
+tmp/
+temp/
+
+# ================================
+# Environment & Config
+# ================================
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# ================================
+# Dependencies
+# ================================
+
+# Composer
+/vendor/
+composer.lock
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+yarn.lock
+
+# ================================
+# Build & Distribution
+# ================================
+
+# Build files
+dist/
+build/
+*.zip
+*.tar.gz
+
+# ================================
+# OS Generated
+# ================================
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+
+# ================================
+# Security
+# ================================
+
+# Never commit sensitive data
+*.key
+*.pem
+*.p12
+secrets.php
+credentials.php
