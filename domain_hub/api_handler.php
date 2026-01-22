@@ -1645,6 +1645,7 @@ function handleApiRequest(){
                             $apiSecret = bin2hex(random_bytes(32));
                             $hashedSecret = password_hash($apiSecret, PASSWORD_DEFAULT);
                             $now = date('Y-m-d H:i:s');
+                            $rateLimit = max(1, intval($settings['api_rate_limit'] ?? 60));
                             Capsule::table('mod_cloudflare_api_keys')->insert([
                                 'userid' => $keyRow->userid,
                                 'key_name' => $keyName,
