@@ -773,6 +773,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
+<?php endif; ?>
+
 <!-- 根域名邀请码模态框 -->
 <div class="modal fade" id="rootdomainInviteCodesModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -973,8 +975,6 @@ function showRootdomainInviteCodesModal() {
 window.showRootdomainInviteCodesModal = showRootdomainInviteCodesModal;
 window.copyRootdomainInviteCode = copyRootdomainInviteCode;
 </script>
-
-<?php endif; ?>
 
 <!-- Bootstrap JS -->
 <script src="<?php echo htmlspecialchars($cfmodAssetsBase . '/js/bootstrap.bundle.min.js', ENT_QUOTES); ?>"></script>

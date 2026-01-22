@@ -21,10 +21,10 @@
 
 ## 🐛 已修复的问题
 
-### 问题1: 根域名邀请按钮点击无响应
-- **症状：** 用户点击按钮没有任何反应
-- **原因：** 模板条件嵌套错误
-- **修复：** 调整代码结构，移出错误的条件块
+### 问题1: 根域名邀请按钮点击无响应（已解锁用户）
+- **症状：** 已通过邀请注册的用户点击按钮没有任何反应
+- **原因：** 模板条件嵌套错误（嵌套在 `!inviteRegUnlocked` 内）
+- **修复：** 移出 `!inviteRegUnlocked` 条件块
 - **影响文件：** `templates/client/partials/modals.tpl`
 - **详细文档：** [BUG_FIX_ROOTDOMAIN_INVITE.md](./BUG_FIX_ROOTDOMAIN_INVITE.md)
 
@@ -34,6 +34,13 @@
 - **修复：** 添加自动检测和修复逻辑
 - **影响文件：** `lib/Services/RootdomainInviteService.php`
 - **详细文档：** [FIX_SUBDOMAIN_COLUMN_ERROR.md](./FIX_SUBDOMAIN_COLUMN_ERROR.md)
+
+### 问题3: 功能独立性问题
+- **症状：** 关闭邀请注册后，根域名邀请功能也无法使用
+- **原因：** 模板条件嵌套错误（嵌套在 `inviteRegistrationEnabled` 内）
+- **修复：** 完全移出邀请注册条件块，使两个功能独立
+- **影响文件：** `templates/client/partials/modals.tpl`
+- **详细文档：** [FIX_INDEPENDENT_FEATURES.md](./FIX_INDEPENDENT_FEATURES.md)
 
 ---
 
@@ -74,19 +81,22 @@ AFTER `invitee_email`;
 
 ### 修复前
 ```
-❌ 按钮点击无响应
+❌ 已解锁用户按钮点击无响应
+❌ 关闭邀请注册后根域名邀请失效
 ❌ 浏览器控制台报错: function not defined
 ❌ 使用邀请码时数据库报错
 ❌ 邀请功能完全无法使用
+❌ 功能开关组合不正确
 ```
 
 ### 修复后
 ```
-✅ 按钮正常工作
+✅ 所有用户按钮正常工作
+✅ 功能开关完全独立
 ✅ 弹窗正常显示
 ✅ 邀请码可以正常使用
 ✅ 邀请历史完整记录
-✅ 所有功能正常
+✅ 所有配置组合都正常
 ```
 
 ---
@@ -95,8 +105,10 @@ AFTER `invitee_email`;
 
 ### 核心修复
 1. `templates/client/partials/modals.tpl`
-   - 移动根域名邀请模态框到正确位置
+   - 第一次修复：移出 `!inviteRegUnlocked` 条件块
+   - 第二次修复：移出 `inviteRegistrationEnabled` 条件块
    - 注册JavaScript函数到全局作用域
+   - 使根域名邀请功能完全独立
 
 2. `lib/Services/RootdomainInviteService.php`
    - 添加数据库字段自动检测
@@ -111,9 +123,10 @@ AFTER `invitee_email`;
 6. `QUICK_FIX_GUIDE.md` - 快速修复指南
 7. `FIX_SUBDOMAIN_COLUMN_ERROR.md` - 数据库问题详细说明
 8. `BUG_FIX_ROOTDOMAIN_INVITE.md` - 按钮问题详细分析
-9. `CODE_REVIEW_REPORT.md` - 完整代码审查报告
-10. `问题修复说明.md` - 中文简明说明
-11. `FIXES_README.md` - 本文件（文档索引）
+9. `FIX_INDEPENDENT_FEATURES.md` - 功能独立性问题详细说明
+10. `CODE_REVIEW_REPORT.md` - 完整代码审查报告
+11. `问题修复说明.md` - 中文简明说明
+12. `FIXES_README.md` - 本文件（文档索引）
 
 ---
 
@@ -181,11 +194,13 @@ AFTER `invitee_email`;
 ## 📝 更新日志
 
 ### 2024-01-21
-- ✅ 修复根域名邀请按钮无响应问题
+- ✅ 修复根域名邀请按钮无响应问题（已解锁用户）
 - ✅ 修复数据库字段缺失错误
+- ✅ 修复功能独立性问题（邀请注册开关影响根域名邀请）
 - ✅ 添加自动修复机制
 - ✅ 创建完整的修复文档
 - ✅ 提供多种修复方案
+- ✅ 完全解耦两个独立功能
 
 ---
 
