@@ -816,8 +816,39 @@ document.addEventListener('DOMContentLoaded', function() {
                             $inviteCodeData = $rootdomainInviteCodes[$rootdomain] ?? null;
                             $inviteCode = $inviteCodeData ? ($inviteCodeData['invite_code'] ?? '') : '';
                             
-                            // 如果用户还没有这个根域名的邀请码，自动生成
-                            if ($inviteCode === '' && ($userid ?? 0) > 0) {
+                            // 先获取该根域名已邀请人数
+                            $invitedCount = 0;
+                            try {
+                                if (class_exists('CfRootdomainInviteService') && ($userid ?? 0) > 0) {
+                                    $invitedCount = CfRootdomainInviteService::getUserInviteCount($userid, $rootdomain);
+                                }
+                            } catch (\Throwable $e) {
+                                $invitedCount = 0;
+                            }
+                            
+                            // 检查是否达到上限
+                            $maxLimit = $rootdomainInviteMaxPerUser;
+                            $hasReachedLimit = false;
+                            
+                            if ($maxLimit > 0) {
+                                // 检查是否为特权用户
+                                $isPrivileged = false;
+                                try {
+                                    if (function_exists('cf_is_user_privileged') && cf_is_user_privileged($userid)) {
+                                        $isPrivileged = true;
+                                    }
+                                } catch (\Throwable $e) {
+                                    // 忽略错误
+                                }
+                                
+                                // 非特权用户且已达上限
+                                if (!$isPrivileged && $invitedCount >= $maxLimit) {
+                                    $hasReachedLimit = true;
+                                }
+                            }
+                            
+                            // 只有未达上限才生成邀请码
+                            if (!$hasReachedLimit && $inviteCode === '' && ($userid ?? 0) > 0) {
                                 try {
                                     if (class_exists('CfRootdomainInviteService')) {
                                         $generated = CfRootdomainInviteService::getOrCreateInviteCode($userid, $rootdomain);
@@ -826,16 +857,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 } catch (\Throwable $e) {
                                     $inviteCode = '';
                                 }
-                            }
-                            
-                            // 获取该根域名已邀请人数
-                            $invitedCount = 0;
-                            try {
-                                if (class_exists('CfRootdomainInviteService') && ($userid ?? 0) > 0) {
-                                    $invitedCount = CfRootdomainInviteService::getUserInviteCount($userid, $rootdomain);
-                                }
-                            } catch (\Throwable $e) {
-                                $invitedCount = 0;
                             }
                             
                             $remainingInvites = $rootdomainInviteMaxPerUser > 0 ? max(0, $rootdomainInviteMaxPerUser - $invitedCount) : -1;
@@ -848,7 +869,23 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <code><?php echo htmlspecialchars($rootdomain); ?></code>
                                         </h6>
                                         
-                                        <?php if ($inviteCode !== ''): ?>
+                                        <?php if ($hasReachedLimit): ?>
+                                            <!-- 达到上限：显示提示 -->
+                                            <div class="alert alert-warning mb-0">
+                                                <div class="d-flex align-items-start">
+                                                    <i class="fas fa-exclamation-triangle me-2 mt-1"></i>
+                                                    <div class="flex-grow-1">
+                                                        <strong><?php echo $modalText('cfclient.rootdomain_invite.limit_reached_title', '已达邀请上限'); ?></strong>
+                                                        <p class="mb-2 mt-2 small"><?php echo $modalText('cfclient.rootdomain_invite.limit_reached_desc', '您已邀请 %s 人，已达到该根域名的邀请上限（最多 %s 人）。', [$invitedCount, $maxLimit]); ?></p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-users"></i>
+                                                            <?php echo $modalText('cfclient.rootdomain_invite.invited_count', '已邀请：%s 人', [$invitedCount]); ?>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php elseif ($inviteCode !== ''): ?>
+                                            <!-- 未达上限：显示邀请码 -->
                                             <div class="mb-3">
                                                 <label class="form-label small text-muted">
                                                     <?php echo $modalText('cfclient.rootdomain_invite.your_code', '您的邀请码'); ?>
@@ -871,18 +908,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                                     <?php echo $modalText('cfclient.rootdomain_invite.invited_count', '已邀请：%s 人', [$invitedCount]); ?>
                                                 </small>
                                                 <?php if ($remainingInvites >= 0): ?>
-                                                    <small class="<?php echo $remainingInvites > 0 ? 'text-success' : 'text-danger'; ?>">
-                                                        <?php if ($remainingInvites > 0): ?>
-                                                            <i class="fas fa-check-circle"></i>
-                                                            <?php echo $modalText('cfclient.rootdomain_invite.remaining', '剩余：%s', [$remainingInvites]); ?>
-                                                        <?php else: ?>
-                                                            <i class="fas fa-exclamation-triangle"></i>
-                                                            <?php echo $modalText('cfclient.rootdomain_invite.limit_reached', '已达上限'); ?>
-                                                        <?php endif; ?>
+                                                    <small class="text-success">
+                                                        <i class="fas fa-check-circle"></i>
+                                                        <?php echo $modalText('cfclient.rootdomain_invite.remaining', '剩余：%s', [$remainingInvites]); ?>
                                                     </small>
                                                 <?php endif; ?>
                                             </div>
                                         <?php else: ?>
+                                            <!-- 邀请码生成失败 -->
                                             <div class="alert alert-warning mb-0">
                                                 <small>
                                                     <i class="fas fa-exclamation-triangle"></i>
