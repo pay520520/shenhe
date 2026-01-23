@@ -800,13 +800,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 ?>
                 
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    <?php if ($rootdomainInviteMaxPerUser > 0): ?>
-                        <?php echo $modalText('cfclient.rootdomain_invite.description_with_limit', '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，每个根域名最多可邀请 %s 个好友。邀请码使用后会自动刷新。', [$rootdomainInviteMaxPerUser]); ?>
-                    <?php else: ?>
-                        <?php echo $modalText('cfclient.rootdomain_invite.description', '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，好友使用后邀请码会自动刷新。'); ?>
-                    <?php endif; ?>
+                <div class="alert alert-warning" style="background-color: #fff3cd; border-color: #ffc107;">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle me-2 mt-1"></i>
+                        <div class="flex-grow-1">
+                            <div class="mb-2">
+                                <?php if ($rootdomainInviteMaxPerUser > 0): ?>
+                                    <?php echo $modalText('cfclient.rootdomain_invite.description_with_limit', '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，每个根域名最多可邀请 %s 个好友。邀请码使用后会自动刷新。', [$rootdomainInviteMaxPerUser]); ?>
+                                <?php else: ?>
+                                    <?php echo $modalText('cfclient.rootdomain_invite.description', '以下根域名需要邀请码才能注册。您可以分享您的邀请码给好友，好友使用后邀请码会自动刷新。'); ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="border-top pt-2" style="border-color: #ffc107 !important;">
+                                <strong><i class="fas fa-exclamation-triangle me-1"></i><?php echo $modalText('cfclient.rootdomain_invite.important_reminder', '重要提醒：'); ?></strong>
+                                <?php echo $modalText('cfclient.rootdomain_invite.important_warning', '您可以分享给好友注册码，但请提醒对方遵守域名使用规则。一旦对方违规使用，您的账户也会同步被封禁。'); ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <?php if (!empty($inviteEnabledRoots)): ?>
