@@ -1696,6 +1696,13 @@ function domain_hub_config() {
                 "Default" => "72",
                 "Description" => "生成的域名转赠接收码有效时长（单位：小时）。",
             ],
+            "domain_gift_min_age_days" => [
+                "FriendlyName" => "域名转赠注册时长限制（天）",
+                "Type" => "text",
+                "Size" => "4",
+                "Default" => "7",
+                "Description" => "域名注册满多少天后才允许转赠。设置为 0 表示不限制。",
+            ],
             "api_logs_retention_days" => [
                 "FriendlyName" => "API日志保留天数",
                 "Type" => "text",
