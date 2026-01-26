@@ -709,9 +709,10 @@ class CfClientController
                                             }
 
                                             $createdAtTs = $subdomain->created_at ? strtotime((string) $subdomain->created_at) : 0;
-                                            $minGiftAgeSeconds = 7 * 86400;
-                                            if ($createdAtTs <= 0 || ($now - $createdAtTs) < $minGiftAgeSeconds) {
-                                                throw new \RuntimeException(self::actionText('cfclient.ajax.gift.min_age', '该域名注册未满7天，暂不支持转赠'));
+                                            $minGiftAgeDays = intval($settingsForGift['domain_gift_min_age_days'] ?? 7);
+                                            $minGiftAgeSeconds = $minGiftAgeDays * 86400;
+                                            if ($minGiftAgeDays > 0 && ($createdAtTs <= 0 || ($now - $createdAtTs) < $minGiftAgeSeconds)) {
+                                                throw new \RuntimeException(self::actionText('cfclient.ajax.gift.min_age', '该域名注册未满 %s 天，暂不支持转赠。', [$minGiftAgeDays]));
                                             }
 
                                             if (intval($subdomain->gift_lock_id ?? 0) > 0) {
